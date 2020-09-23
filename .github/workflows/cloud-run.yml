@@ -9,6 +9,7 @@ env:
   PROJECT_ID: ${{ secrets.RUN_PROJECT }}
   RUN_REGION: us-central1
   SERVICE_NAME: gin-gorm-run-sql
+  DOCKER_BUILDKIT: 1
 
 jobs:
   setup-build-deploy:
@@ -26,13 +27,19 @@ jobs:
         service_account_key: ${{ secrets.RUN_SA_KEY }}
         project_id: ${{ secrets.RUN_PROJECT }}
 
-    # Build and push image to Google Container Registry
+    - name: Configure Docker to use the gcloud command-line tool as a credential
+    - run: |-
+          gcloud auth configure-docker
+
     - name: Build
       run: |-
-        gcloud builds submit \
-          --quiet \
-          --tag "gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA"
-    # Deploy image to Cloud Run
+        docker build --target deploy --tag "gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA" .
+
+    - name: Push the Docker image to Google Container Registry
+      run: |-
+        docker push "gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA"
+
+    # GCRのイメージをCloudRunにデプロイ
     - name: Deploy
       run: |-
         gcloud run deploy "$SERVICE_NAME" \
