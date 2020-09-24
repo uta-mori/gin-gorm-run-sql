@@ -3,7 +3,7 @@ name: Build and Deploy to Cloud Run
 on:
   push:
     branches:
-    - develop
+      - develop
 
 env:
   PROJECT_ID: ${{ secrets.RUN_PROJECT }}
@@ -17,34 +17,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
 
-    # Setup gcloud CLI
-    - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
-      with:
-        version: '290.0.1'
-        service_account_key: ${{ secrets.RUN_SA_KEY }}
-        project_id: $PROJECT_ID
+      # Setup gcloud CLI
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          version: "290.0.1"
+          service_account_key: ${{ secrets.RUN_SA_KEY }}
+          project_id: $PROJECT_ID
 
-    - name: Configure Docker to use the gcloud command-line tool as a credential
-    - run: |-
+      - name: Configure Docker to use the gcloud command-line tool as a credential
+      - run: |-
           gcloud auth configure-docker
 
-    - name: Build
-      run: |-
-        docker build --target deploy --tag "gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA" .
+      - name: Build
+        run: |-
+          docker build --target deploy --tag "gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA" .
 
-    - name: Push the Docker image to Google Container Registry
-      run: |-
-        docker push "gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA"
+      - name: Push the Docker image to Google Container Registry
+        run: |-
+          docker push "gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA"
 
-    # GCRのイメージをCloudRunにデプロイ
-    - name: Deploy
-      run: |-
-        gcloud run deploy "$SERVICE_NAME" \
-          --quiet \
-          --region "$RUN_REGION" \
-          --image "gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA" \
-          --platform "managed" \
-          --allow-unauthenticated
+      # GCRのイメージをCloudRunにデプロイ
+      - name: Deploy
+        run: |-
+          gcloud run deploy "$SERVICE_NAME" \
+            --quiet \
+            --region "$RUN_REGION" \
+            --image "gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA" \
+            --platform "managed" \
+            --allow-unauthenticated
