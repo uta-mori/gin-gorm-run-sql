@@ -1,6 +1,10 @@
 name: Build and Deploy to Cloud Run
 
-on: [ workflow_dispatch ]
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
 
 env:
   PROJECT_ID: ${{ secrets.RUN_PROJECT }}
@@ -22,7 +26,7 @@ jobs:
         with:
           version: '290.0.1'
           service_account_key: ${{ secrets.RUN_SA_KEY }}
-          project_id: $PROJECT_ID
+          project_id: ${{ secrets.RUN_PROJECT }}
 
       - name: Configure Docker to use the gcloud command-line tool as a credential
         run: |-
